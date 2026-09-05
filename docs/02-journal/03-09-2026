@@ -13,7 +13,8 @@ chaines de caractere str
 booleen  bool
 
 
-nom
+nomon utilise FOR lorsque le nombre de fois  est contenuon uilise while
+
 Prenom
 Age
 Date de reservation
