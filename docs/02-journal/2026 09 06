@@ -1,0 +1,137 @@
+ 1: # Journal du 07 Septembre 2026
+   2  ##Fait aujourd'hui
+**Documentation**
+  15  ##
+
+
+Table of Contents
+Introduction à KiCad
+Téléchargez et installez KiCad
+Assistance
+Méthode de travail avec KiCad
+Vue d’ensemble
+Annotations et rétro-annotations
+Utilisation de KiCad
+Clavier
+Dessiner des schémas électroniques
+Utiliser Eeschema
+Connexions par bus avec KiCad
+Router le circuit imprimé (PCB)
+Utiliser Pcbnew
+Générer les fichiers Gerber
+Utiliser GerbView
+Routage automatique avec FreeRouter
+Les annotations dans KiCad
+Créer un symbole de composant avec KiCad
+Utiliser l’éditeur des librairies de symboles
+Exporter, importer et modifier une librairie
+Créer un symbole de composant avec QuickLib
+Créer un symbole de composant avec un grand nombre de broches
+Créer une empreinte de composant
+Utiliser l’éditeur d’empreintes
+Portabilité des fichiers d’un projet KiCad
+Documentation complémentaire de KiCad
+La documentation de KiCad sur l’internet
+
+définition du Circuit imprimé 
+Le circuit imprimé, ou PCB, est un élément essentiel dans l’électronique moderne.
+ Il est constitué d'un matériau non conducteur, comme la fibre de verre, recouvert
+de pistes de cuivre qui forment les circuits. Ces pistes de cuivre sont
+essentielles car elles conduisent l'électricité entre les composants. La complexité
+d'un circuit imprimé peut varier considérablement, des simples cartes monocouches
+ aux conceptions multicouches complexes. 
+
+ Un PCB (Printed Circuit Board) est un circuit imprimé qui permet de connecter et de maintenir électriquement des composants électroniques sur une carte.
+Définition et rôle
+Un PCB, ou circuit imprimé, est une plaque servant de support mécanique et électrique pour les composants électroniques. Il remplace le câblage complexe traditionnel en intégrant des pistes de cuivre gravées sur un substrat isolant, permettant aux signaux électriques de circuler entre les composants de manière organisée et fiable 
+Altium
+Altium
++2
+. On peut le considérer comme le "réseau routier" des signaux électriques dans un appareil électronique 
+
+Composition
+Un PCB est constitué de plusieurs éléments :
+
+Substrat isolant : généralement en fibre de verre ou en époxy, il assure la rigidité et l'isolation électrique 
+m
+.
+Couches de cuivre : gravées chimiquement pour former des pistes qui relient les composants 
+
+.
+Pads et vias : zones de connexion pour souder les composants ou relier différentes couches 
+
+Masque de soudure et sérigraphie : couche protectrice et indications pour le placement des composants 
+
+Les PCB peuvent être simple face, double face ou multicouches, selon la complexité du circuit et les besoins en densité de composants 
+
+Fabrication
+La fabrication d'un PCB suit plusieurs étapes :
+
+Conception CAO : création du schéma électrique et du plan de la carte.
+Dépôt de cuivre : application d'une couche de cuivre sur le substrat.
+Gravure : suppression du cuivre inutile pour former les pistes.
+Perçage et plaquage : création de trous pour les composants et métallisation pour la conductivité.
+Protection : ajout d'une couche protectrice contre la corrosion et les courts-circuits 
+commentouvrir.com
+commentouvrir.com
+
+Applications
+Les PCB sont utilisés dans tous les appareils électroniques modernes, des smartphones et ordinateurs 
+aux consoles de jeux et équipements industriels. Ils permettent de réduire l'encombrement, d'améliorer
+ la fiabilité et de faciliter la maintenance des circuits électroniques 
+
+
+Pour passer d'un circuit "2D" à la vue "3D" dans *KiCad*, voici le flux complet. Je pars du principe que tu as déjà ton schéma, sinon on commence à l'étape 1.
+
+*Étapes de réalisation avec KiCad : du schéma 2D jusqu'au 3D*
+
+*1. Partie Schéma - 2D logique*
+C'est ton circuit vu "en l'air", sans taille réelle.
+1. *Ouvre KiCad > Nouveau projet*
+2. *Eeschema : Dessine le schéma*
+   - Place les composants : résistances, CI, connecteurs...
+   - Relie avec les fils/nets
+   - Ajoute les valeurs et les références : R1, U1...
+   - *Important* : Vérifie ERC : `Inspecter > Vérifier le schéma électrique`. Corrige les erreurs.
+3. *Associer les empreintes* : `Outils > Associer les empreintes`
+   - Chaque composant du schéma doit avoir un footprint PCB. Ex: R_0805, SOIC-8_3.9mm
+   - Sans ça tu ne peux pas passer en PCB
+
+*2. Partie PCB - 2D physique*
+Là on passe aux vraies dimensions et pistes.
+4. *Ouvre le PCB Editor* : `Outils > Mettre à jour le PCB à partir du schéma`
+   - Importe tous les composants. Ils arrivent en tas hors du board.
+5. *Définir le contour du circuit* : `Calque Edge.Cuts`
+   - Dessine la forme de ta carte en mm
+6. *Placement des composants* :
+   - Range les composants. Groupe analogique/numérique, connecteurs sur les bords, découplage près des CI
+7. *Routage des pistes* : `Calques F.Cu et B.Cu`
+   - Trace manuellement ou auto-routeur
+   - Respecte la largeur de piste et l'espacement selon ton courant
+8. *Vérification DRC* : `Inspecter > Vérification des règles de conception`
+   - Corrige les pistes trop proches, vias manquants, etc.
+9. *Ajouter sérigraphie, zones de masse, trous de fixation*
+
+*3. Passage en 3D*
+Maintenant que le PCB 2D est propre, on visualise en volume.
+10. *Ouvre la visionneuse 3D* : `Affichage > Visionneuse 3D` ou touche `Alt + 3`
+11. *Configurer le rendu 3D* :
+    - `Préférences > Visionneuse 3D` pour ajouter les modèles 3D si manquants
+    - Par défaut KiCad utilise les modèles .step associés aux footprints de la lib officielle
+    - Si un composant est tout plat : `Éditer le footprint > Propriétés > Modèles 3D` et ajoute le fichier .step
+12. *Explorer* :
+    - Molette : zoom
+    - Clic droit glisser : rotation
+    - `R` : rendu Raytracing pour un rendu réaliste avec reflets
+    - Tu peux cacher/afficher les pistes, le masque de soudure, la sérigraphie
+
+*4. Export pour fabrication*
+13. *Générer les Gerber* : `Fichier > Fabrication > Tracer`
+    - Choisis Gerber + Drill pour le fabricant
+14. *Générer le STEP 3D complet* : `Fichier > Export > STEP`
+    - Utile pour vérifier l'encombrement dans un boîtier avec Fusion360, FreeCAD
+
+*3 astuces qui évitent 90% des galères*
+1. *Modèles 3D* : Utilise la librairie officielle `KiCad Libraries 3D`. Si tu fais ton propre footprint, ajoute tout de suite le .step
+2. *Hauteur des composants* : En 3D tu vois direct si un condo ou un radiateur tape le couvercle du boîtier
+3. *Vérif mécanique* : Tourne la carte en 3D pour vérifier que les connecteurs dépassent bien du bon côté
