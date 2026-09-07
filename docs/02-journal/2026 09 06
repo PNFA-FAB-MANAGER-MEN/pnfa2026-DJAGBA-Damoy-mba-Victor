@@ -427,10 +427,4 @@ Si en faisant `Alt+3` tu as des composants tout plats :
 Actuellement ta LED s'allume la NUIT. 
 Si tu veux l'inverse : LED s'allume le JOUR, inverse juste R1 et LDR sur le schéma.
 
----
 
-Tu veux que je fasse quoi maintenant ?
-
-1.  *Je te refais un routage plus propre* basé sur ta photo
-2.  *Je te montre comment ajouter un potentiomètre* pour régler la sensibilité
-3.  *Je t'explique comment simuler* le circuit avant de fabriquer
