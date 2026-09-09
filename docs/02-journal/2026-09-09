@@ -1,0 +1,191 @@
+
+[Journal 09 09 2026]
+from machine import Pin
+led = Pin (2, Pin, IN)
+but = Pin (2, Pin, IN)
+
+While True :
+    but_status = but , value ()
+    if (but_status == False):
+        led.value(1)
+        else :
+            led.value(0)
+
+[09/09 17:12]  Ok on part de KiCad jusqu’au code avec *Thonny* 👌 
+Ton schéma c’est une Seeed *XIAO* + 1 bouton + 1 LED + régulateur. La XIAO gère tout.
+
+Voici la procédure complète A à Z :
+
+*Partie 1: De KiCad à la carte physique*
+
+*A. Vérifier le schéma KiCad*
+1. *Bouton SW1*: R1 en pull-up vers VCC, C1 anti-rebond, va sur D2 de la XIAO. Quand on appuie → D2 = 0V
+2. *LED D1*: R2 + LED vers GND, commandée par D3 de la XIAO. D3 = 1 → LED ON
+3. *Alim U2*: C’est sûrement un AMS1117-3.3. VCC en entrée, 3V3_OUT de la XIAO en sortie. Attention: la XIAO tourne en 3.3V
+4. *XIAO U3*: VBUS pour USB, GND commun, 3V3_OUT pour alimenter le reste
+
+*B. Passer au PCB*
+1. Dans KiCad: `Outils > Attribuer les empreintes`. Cherche `Seeed_XIAO`, `SW_PUSH`, `LED_0603`, `R_0603`, `SOT-223` pour U2
+2. `Faire le routage`: place les composants, relie D2, D3, VCC, GND
+3. DRC pour vérifier qu’il n’y a pas d’erreur
+
+*C. Fabrication*
+1. `Fichier > Tracer > Gerber` pour envoyer au fabricant JLCPCB, PCBWay, etc.
+2. Reçois la carte, soude la XIAO, U2, R1, R2, C1, SW1, D1
+
+*D. Test matériel*
+Avec un multimètre: VCC = 5V, 3V3_OUT = 3.3V. Sans ça on ne programme rien.
+
+*Partie 2: Préparer la XIAO pour Thonny*
+
+Thonny ne programme pas en C++. Il faut mettre *MicroPython* sur la XIAO d’abord.
+
+*E. Installer les outils*
+1. Installe *Thonny IDE* sur ton PC: http://thonny.org
+2. Installe les *drivers USB* de la XIAO. Si c’est une XIAO RP2040, Windows installe tout seul. Si c’est SAMD21, installe le driver Seeed.
+
+*F. Flasher MicroPython sur la XIAO*
+1. Branche la XIAO en USB en maintenant le bouton BOOT enfoncé 2s. Elle apparaît comme une clé USB "RPI-RP2"
+2. Dans Thonny: `Outils > Options > Interpréteur` → choisis "MicroPython (Raspberry Pi Pico)" ou "MicroPython (generic)"
+3. Thonny va te proposer "Installer MicroPython". Clique et sélectionne le .uf2 pour XIAO RP2040 ou XIAO SAMD21.
+   Lien officiel: cherche "MicroPython XIAO Seeed"
+4. Une fois flashé, débranche/rebranche. Thonny doit afficher `>>>` en bas = REPL actif
+
+*Partie 3: Programmer avec Thonny*
+
+*G. Écrire le code pour ton circuit*
+Vu ton schéma:
+- D2 = entrée bouton avec pull-up interne
+- D3 = sortie LED
+
+Colle ça dans Thonny et fais `Enregistrer sous > Périphérique MicroPython > main.py`
+from machine import Pin
+import time
+
+D2 = bouton, pull-up interne activé
+bouton = Pin(2, Pin.IN, Pin.PULL_UP)
+D3 = LED
+led = Pin(3, Pin.OUT)
+
+led.value(0) # LED éteinte au départ
+
+while True:
+    if bouton.value() == 0:  # bouton appuyé
+        led.value(1)         # allume LED
+    else:
+        led.value(0)         # éteint LED
+    time.sleep(0.05)         # anti-rebond logiciel
+*H. Tester et débugger*
+1. Clique sur "Run" dans Thonny. La LED doit s’allumer quand tu appuies sur SW1
+2. Tu peux ouvrir le "Shell" pour faire `print(bouton.value())` et voir l’état
+3. Pour que ça démarre tout seul: enregistre en `main.py` sur la XIAO. A chaque reset le code tourne
+
+*I. Conseils importants*
+- *Alimentation*: Ne mets jamais 5V sur les pins D0-D10. La XIAO est en 3.3V
+- *R2*: Prends 330Ω à 1kΩ pour la LED pour ne pas tirer trop de courant
+- *C1*: 100nF suffit pour filtrer le bouton
+
+*Résumé express*
+KiCad schéma → PCB → Soudure → Flash MicroPython → Code Thonny → Test
+
+Tu veux que je te fasse le code complet avec anti-rebond propre + mode "appui court = toggle" ?
+Et c’est bien une XIAO RP2040 que tu utilises ou la version SAMD21 ? Ça change juste le fichier MicroPython à flasher.
+[09/09 17:14] Meta AI: Parfait 🔥 
+On part sur du code complet en *MicroPython avec Thonny* pour ta XIAO.
+
+Vu ton schéma:
+- *D2* = Bouton SW1 avec pull-up. Appui = 0
+- *D3* = LED. 1 = allumée
+- Anti-rebond logiciel + mode "appui court = toggle" + "appui long = clignotement"
+
+*Code complet : `main.py`*
+Colle ça dans Thonny puis `Fichier > Enregistrer sous > Périphérique MicroPython > main.py`
+from machine import Pin
+import time
+
+========== CONFIG ==========
+PIN_BOUTON = 2      # D2 sur XIAO
+PIN_LED = 3         # D3 sur XIAO
+
+TEMPS_ANTI_REBOND = 50   # ms pour ignorer les rebonds
+TEMPS_APPUI_LONG = 800   # ms pour considérer un appui long
+
+========== INIT ==========
+bouton = Pin(PIN_BOUTON, Pin.IN, Pin.PULL_UP)
+led = Pin(PIN_LED, Pin.OUT)
+
+etat_led = False
+led.value(etat_led)
+
+dernier_etat_bouton = 1
+dernier_changement = time.ticks_ms()
+appui_en_cours = False
+temps_appui_debut = 0
+
+print("XIAO démarrée. Appui court = Toggle. Appui long = Blink 5 fois")
+
+========== FONCTIONS ==========
+def toggle_led():
+    global etat_led
+    etat_led = not etat_led
+    led.value(etat_led)
+    print("LED:", "ON" if etat_led else "OFF")
+
+def blink_led(nombre=5, delai=200):
+    print(f"Blink x{nombre}")
+    for i in range(nombre):
+        led.value(1)
+        time.sleep_ms(delai)
+        led.value(0)
+        time.sleep_ms(delai)
+    led.value(etat_led) # remet l'état d'avant
+
+========== BOUCLE PRINCIPALE ==========
+while True:
+    etat_actuel = bouton.value()
+    maintenant = time.ticks_ms()
+
+    # Détection changement d'état avec anti-rebond
+    if etat_actuel != dernier_etat_bouton:
+        if time.ticks_diff(maintenant, dernier_changement) > TEMPS_ANTI_REBOND:
+            dernier_changement = maintenant
+            dernier_etat_bouton = etat_actuel
+
+            # Bouton appuyé = 0
+            if etat_actuel == 0:
+                appui_en_cours = True
+                temps_appui_debut = maintenant
+            # Bouton relaché = 1
+            else:
+                if appui_en_cours:
+                    duree_appui = time.ticks_diff(maintenant, temps_appui_debut)
+                   
+                    if duree_appui < TEMPS_APPUI_LONG:
+                        # Appui court
+                        toggle_led()
+                    else:
+                        # Appui long
+                        blink_led(5, 150)
+                   
+                    appui_en_cours = False
+
+    time.sleep_ms(10) # pour ne pas saturer le CPU
+*Comment ça marche sur ton circuit*
+Action Résultat
+**Appui court < 0.8s** La LED s'allume/s'éteint. Toggle
+**Appui long > 0.8s** La LED clignote 5 fois puis revient à son état
+**Au démarrage** La LED est éteinte
+*Points clés pour que ça marche*
+
+1.  *Branchement*: Vérifie que D2 va bien sur le point entre R1 et SW1. D3 va sur R2 puis D1
+2.  *R2*: Mets 470Ω. Avec 3.3V ça donne ∼5mA, nickel pour la LED
+3.  *Alim*: Branche la XIAO en USB. U2 ne sert que si tu alimentes en externe sur VCC
+4.  *Débogage*: Ouvre le Shell de Thonny. Tu verras les `print()` pour savoir si le bouton est détecté
+
+*Variantes rapides si tu veux autre chose*
+
+Tu veux juste ON quand on appuie ? Remplace toute la boucle par:
+while True:
+    led.value(not bouton.value()) # 0 appuyé -> 1
+    time.sleep_ms
+’ajoute aussi la gestion de `PWR_ENRG_FLAG` ou d’un 2ème bouton sur D4/D5 ?
